@@ -18,7 +18,7 @@
         new(5, "Tomasz", "Zieliński", 5000m, 3, ["Negocjacje", "CRM"]),
         new(6, "Katarzyna", "Szymańska", 5000m, 1, ["SQL", "Python", "C#"]),
         new(7, "Michał", "Wójcik", 4500m, 2, ["Księgowość", "Excel"]),
-        new(7, "Zbigniew", "Walesiuk", 4000m, 2, ["Excel", "Word"])
+        new(8, "Zbigniew", "Walesiuk", 4000m, 2, ["Excel", "Word"])
     };
 
     public static List<Project> GetProjects() => new()
