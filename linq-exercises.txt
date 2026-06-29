@@ -1,0 +1,24 @@
+Task 1: Find all employees earning strictly more than 10,000 PLN and return their full names  as a single string.
+
+Task 2: Implement a pagination mechanism. Assuming 3 employees per page, retrieve the "second page" of employees. Sort the entire dataset descending by salary, and in case of a tie, sort ascending by last name.
+
+Task 3: Group all employees by their DepartmentId. For each department, return an anonymous object containing the Department ID, the total number of employees, and their average salary.
+
+Task 4: Generate a single, flat list containing all unique skills possessed by all employees across the entire company.
+
+Task 5: Perform an inner join between the Employee and Department collections based on DepartmentId. Return a list of objects containing the Employee's First Name and the Department's Name.
+
+Task 6: Return a list of all departments along with their assigned employees. If a department currently has no employees (e.g., a newly created "Marketing" department), it must still be present in the final result with a null or default value for the employee.
+
+Task 7: Return two boolean values evaluating the following business rules:
+	•Is there anyone in the company who lists "F#" among their skills?
+	•Do all employees in the company earn above a minimum wage threshold (e.g., 4000 PLN)?
+
+Task 8: Given a list of EmployeeIds assigned to Project A and Project B, write highly optimized queries to find:
+	•Employees assigned to both projects simultaneously.
+	•Employees assigned exclusively to Project A.
+
+Task 9: Use the Aggregate operator to build a single, comma-separated string containing the first names of all employees. Do not use the built-in string.Join method.
+
+Task 10: Divide the entire list of employees into smaller, two-person sub-teams (arrays of size 2).
+
