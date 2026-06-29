@@ -3,46 +3,120 @@ var projects = MockData.GetProjects();
 var departments = MockData.GetDepartments();
 
 //exercise 1.
+Console.WriteLine($"\nExercise 1:");
+
 var empOver1000Sal = employees
     .Where(e => e.Salary > 10000)
     .Select(e => $"{e.FirstName} {e.LastName}")
     .ToList();
 string res = String.Join(", ", empOver1000Sal);
-Console.WriteLine($"\nExercise 1: {res}");
+
+var empOver1000SalQuery =
+    from emp in employees
+    where emp.Salary > 10000
+    select $"{emp.FirstName} {emp.LastName}";
+
+Console.WriteLine($"\t (method syntax): {res}");
+Console.WriteLine($"\t (query syntax): " +
+    $"{string.Join(", ", empOver1000SalQuery)}");
 
 //exercise 2.
+Console.WriteLine($"\nExercise 2:");
+
 var secondPage = employees
+    .OrderByDescending(e => e.Salary)
+    .ThenBy(e => e.LastName)
     .Skip(3)
     .Take(3)
-    .OrderByDescending(e => e.Salary)
-    .OrderBy(e => e.LastName)
     .Select(e => $"{e.FirstName} {e.LastName}")
     .ToList();
-Console.WriteLine($"\nExercise 2: \n\t{String.Join(",\n\t", secondPage)}");
+
+var secondPageQuery =
+    (from emp in employees
+    orderby emp.Salary descending, emp.LastName
+    select emp)
+    .Skip(3)
+    .Take(3)
+    .Select(emp => $"{emp.FirstName} {emp.LastName}");
+
+Console.WriteLine($"\t(method syntax): \n\t\t" +
+    $"{string.Join(",\n\t\t", secondPage)}");
+Console.WriteLine($"\t(query/hybrid syntax): \n\t\t" +
+    $"{string.Join(",\n\t\t", secondPageQuery)}");
 
 // exercise 3.
+Console.WriteLine($"\nExercise 3:");
+
 var groupedByDepartment = employees
     .GroupBy(e => e.DepartmentId)
-    .Select(g => new
-    {
-        DepartmentId = g.Key,
-        EmployeesCount = g.Count(),
-        AverageSalary = g.Average(e => e.Salary)
-    })
+    .Join(
+        departments,
+        g => g.Key,
+        d => d.Id,
+        (g, d) => new
+        {
+            DepartmentId = g.Key,
+            DepartmentName = d.Name,
+            EmployeesCount = g.Count(),
+            AverageSalary = g.Average(e => e.Salary)
+        }
+    )
     .ToList();
 
-Console.WriteLine($"\nExercise 3: \n\t" +
-    $"{String.Join("\n\t", groupedByDepartment)}");
+var groupedByDepartmentQuery =
+    from emp in employees
+    group emp by emp.DepartmentId into g
+    join dept in departments on g.Key equals dept.Id
+    select new
+    {
+        DepartmentId = g.Key,
+        DepartmentName = dept.Name,
+        EmployeesCount = g.Count(),
+        AverageSalary = g.Average(e => e.Salary)
+    };
+
+Console.Write("\t(method syntax):\n");
+foreach (var g in groupedByDepartment)
+{
+    Console.WriteLine($"\t\tdepartment ID: " +
+        $"{g.DepartmentId}, department name: " +
+        $"{g.DepartmentName}, employees count: " +
+        $"{g.EmployeesCount}, average salary: " +
+        $"{g.AverageSalary}"
+    );
+}
+
+Console.WriteLine("\t(query/hybrid syntax):)");
+foreach (var g in groupedByDepartmentQuery)
+{
+    Console.WriteLine($"\t\tdepartment ID: {g.DepartmentId}, " +
+        $"department name: {g.DepartmentName}, " +
+        $"employees count: {g.EmployeesCount}, average salary:" +
+        $" {g.AverageSalary}"
+    );
+}
 
 // exercise 4.
+Console.WriteLine($"\nExercise 4:");
+
 var uniqueSkills = employees
     .SelectMany(e => e.Skills)
     .Distinct()
     .ToList();
 
-Console.WriteLine($"\nExercise 4: {String.Join(", ", uniqueSkills)}");
+var uniqueSkillsQuery =
+    (from emp in employees
+     from skill in emp.Skills
+     select skill)
+    .Distinct();
+
+Console.WriteLine($"\t(method syntax): " +
+    $"{String.Join(", ", uniqueSkills)}");
+Console.WriteLine($"\t(query/hybrid syntax): " +
+    $"{String.Join(", ", uniqueSkillsQuery)}");
 
 // exercise 5.
+Console.WriteLine($"\nExercise 5:");
 var enameDname = employees
     .Join(
         departments,
@@ -53,13 +127,29 @@ var enameDname = employees
             EmployeeName = e.FirstName,
             DepartmentName = d.Name
         }
-    )
-    .ToList();
+    ) 
+    .Select(j => $"{j.EmployeeName} -> {j.DepartmentName}");
 
-Console.WriteLine($"\nExercise 5: \n\t{String.Join("\n\t", enameDname)}");
+var enameDnameQuery =
+    (from emp in employees
+    join dept in departments on emp.DepartmentId equals dept.Id
+    select new
+    {
+        EmployeeName = emp.FirstName,
+        DepartmentName = dept.Name
+    })
+    .Select(j => $"{j.EmployeeName} -> {j.DepartmentName}");
+
+Console.WriteLine($"\t(method syntax):\n\t\t" +
+    $"{string.Join("\n\t\t", enameDname)}");
+Console.WriteLine($"\t(query/hybrid syntax):\n\t\t" +
+    $"{string.Join("\n\t\t", enameDnameQuery)}");
+
 
 
 // exercise 6.
+Console.WriteLine($"\nExercise 6:");
+
 var deptEmp = departments
     .GroupJoin(
         employees,
@@ -69,7 +159,6 @@ var deptEmp = departments
         {
             Dept = d,
             Emps = e
-
         }
     )
     .SelectMany(
@@ -80,9 +169,19 @@ var deptEmp = departments
             EmployeeName = emp?.FirstName ?? "No Employees"
         }
     )
+    .Select(gjr => $"{gjr.DeptName} <-- {gjr.EmployeeName}")
     .ToList();
 
-Console.WriteLine($"\nExercise 6: \n\t{String.Join("\n\t", deptEmp)}");
+var deptEmpQuery =
+    from dept in departments
+    join emp in employees on dept.Id equals emp.DepartmentId into empg
+    from emp in empg.DefaultIfEmpty()
+    select $"{dept.Name} <-- {emp?.FirstName ?? "No Employees"}";
+
+
+Console.WriteLine($"\t (method syntax): \n\t\t{string.Join("\n\t\t", deptEmp)}");
+Console.WriteLine($"\t (query/hybrid syntax): \n\t\t{string.Join("\n\t\t", deptEmpQuery)}");
+
 
 // exercise 7.
 
