@@ -9,7 +9,7 @@ var empOver1000Sal = employees
     .Where(e => e.Salary > 10000)
     .Select(e => $"{e.FirstName} {e.LastName}")
     .ToList();
-string res = String.Join(", ", empOver1000Sal);
+string res = string.Join(", ", empOver1000Sal);
 
 var empOver1000SalQuery =
     from emp in employees
@@ -111,9 +111,9 @@ var uniqueSkillsQuery =
     .Distinct();
 
 Console.WriteLine($"\t(method syntax): " +
-    $"{String.Join(", ", uniqueSkills)}");
+    $"{string.Join(", ", uniqueSkills)}");
 Console.WriteLine($"\t(query/hybrid syntax): " +
-    $"{String.Join(", ", uniqueSkillsQuery)}");
+    $"{string.Join(", ", uniqueSkillsQuery)}");
 
 // exercise 5.
 Console.WriteLine($"\nExercise 5:");
@@ -180,22 +180,42 @@ var deptEmpQuery =
 
 
 Console.WriteLine($"\t (method syntax): \n\t\t{string.Join("\n\t\t", deptEmp)}");
-Console.WriteLine($"\t (query/hybrid syntax): \n\t\t{string.Join("\n\t\t", deptEmpQuery)}");
+Console.WriteLine($"\t (query/hybrid syntax): \n\t\t" +
+    $"{string.Join("\n\t\t", deptEmpQuery)}");
 
 
 // exercise 7.
+Console.WriteLine($"\nExercise 7:");
 
 (bool AnyFsharp, bool AllOver4k) fsharpAnyOver4kAll = (
     employees.Any(e => e.Skills.Contains("F#")),
     employees.All(e => e.Salary > 4000m)
 );
 
-Console.WriteLine($"\nExercise 7: \n\tThere is an employee with F# skill: " +
-    $"{fsharpAnyOver4kAll.AnyFsharp}\n\tAll employees earn more than $4000 " +
-    $"a month: {fsharpAnyOver4kAll.AllOver4k}");
+(bool, bool) fsharpAnyOver4kAllQuery = (
+    (from emp in employees
+     where emp.Skills.Contains("F#")
+     select emp).Any(),
+    !(from emp in employees
+     where emp.Salary <= 4000m
+     select emp).Any()
+);
+
+Console.WriteLine($"\t(method syntax): \n\t\tThere is an employee with F#" +
+    $" skill: {fsharpAnyOver4kAll.AnyFsharp}\n\tAll employees earn more" +
+    $" than $4000 a month: {fsharpAnyOver4kAll.AllOver4k}"
+);
+
+Console.WriteLine($"\t(query/hybrid syntax): \n\t\tThere is an employee " +
+    $"with F# skill: {fsharpAnyOver4kAllQuery.Item1}" +
+    $"\n\t\tAll employees earn more than $4000 a month: " +
+    $"{fsharpAnyOver4kAllQuery.Item2}"
+);
 
 
 // exercise 8.
+Console.WriteLine("\nExercise 8:");
+
 var projectAEmployees = projects
     .Where(p => p.Id == 1)
     .SelectMany(p => p.EmployeeIds)
@@ -224,52 +244,114 @@ var singleProjectEmployees = projectAEmployees
     .Except(bothProjectsEmployees)
     .OrderBy(e => e.Id);
 
-Console.WriteLine("\nExercise 8: \n\t" +
-    $"Employees assigned to project A: " + $"{
-        String.Join(
-            ", ", 
+var empIdsAQuery =
+    from proj in projects
+    where proj.Id == 1
+    from empid in proj.EmployeeIds
+    select empid;
+
+var empIdsBQuery =
+    from proj in projects
+    where proj.Id == 2
+    from empid in proj.EmployeeIds
+    select empid;
+
+var projectAEmpsQuery =
+    from empId in empIdsAQuery
+    join emp in employees on empId equals emp.Id
+    select $"{emp.Id} {emp.FirstName} {emp.LastName}";
+
+var projectBEmpsQuery =
+    from empId in empIdsBQuery
+    join emp in employees on empId equals emp.Id
+    select $"{emp.Id} {emp.FirstName} {emp.LastName}";
+
+var bothProjectsEmployeesQuery =
+    from peid in empIdsAQuery.Intersect(empIdsBQuery)
+    join emp in employees on peid equals emp.Id
+    select $"{emp.Id} {emp.FirstName} {emp.LastName}";
+
+var singleProjectEmployeesQuery =
+    from peid in empIdsAQuery.Union(empIdsBQuery).Except(empIdsAQuery.Intersect(empIdsBQuery))
+    join emp in employees on peid equals emp.Id
+    select $"{emp.Id} {emp.FirstName} {emp.LastName}";
+
+Console.WriteLine("\t(method syntax):\n\t\t" +
+$"Employees assigned to project A: " + $"{string.Join(
+            ", ",
             projectAEmployees
                 .Select(e => $"{e.Id} {e.FirstName} {e.LastName}")
                 .ToList()
-        )
-    }" + $"\n\tEmployees assigned to project B: " + $"{
-        String.Join(
-            ", ", 
+        )}" + $"\n\t\tEmployees assigned to project B: " + $"{string.Join(
+            ", ",
             projectBEmployees
                 .Select(e => $"{e.Id} {e.FirstName} {e.LastName}")
                 .ToList()
-        )
-    }" + $"\n\tEmployees assigned to both projects: " + $"{
-        String.Join(
-            ", ", 
+        )}" + $"\n\t\tEmployees assigned to both projects: " + $"{string.Join(
+            ", ",
             bothProjectsEmployees
                 .Select(e => $"{e.Id} {e.FirstName} {e.LastName}")
                 .ToList()
-        )
-    }" + $"\n\tEmployees assigned to only one project: " + $"{
-        String.Join(
-            ", ", 
+        )}" + $"\n\t\tEmployees assigned to only one project: " + $"{string.Join(
+            ", ",
             singleProjectEmployees
                 .Select(e => $"{e.Id} {e.FirstName} {e.LastName}")
                 .ToList()
-        )
-    }");
+        )}"
+);
+
+Console.WriteLine("\t(query/hybrid syntax):\n\t\t" +
+$"Employees assigned to project A: " + 
+    $"{string.Join(
+        ", ", projectAEmpsQuery
+    )}" + $"\n\t\tEmployees assigned to project B: " + $"{string.Join(
+        ", ", projectBEmpsQuery
+    )}" + $"\n\t\tEmployees assigned to both projects: " + $"{string.Join(
+        ", ", bothProjectsEmployeesQuery
+    )}" + $"\n\t\tEmployees assigned to only one project: " + $"{string.Join(
+        ", ", singleProjectEmployeesQuery
+    )}"
+);
 
 //exercise 9.
+Console.WriteLine($"\nExercise 9:");
+
 var empNamesString = employees
     .Select(e => e.FirstName)
-    .Aggregate(string.Empty, (n1, n2) => String.Concat(n1, ", ", n2));
+    .Aggregate((n1, n2) => String.Concat(n1, ", ", n2));
 
-Console.WriteLine($"\nExercise 9: {empNamesString}");
+var empNamesStringQuery =
+    (from emp in employees
+     select emp.FirstName)
+    .Aggregate((n1, n2) => String.Concat(n1, ", ", n2));
+
+
+Console.WriteLine($"\t(method syntax): {empNamesString}");
+Console.WriteLine($"\t(hybrid syntax): {empNamesStringQuery}");
+
+
 
 //exercise 10.
+Console.WriteLine("\nExercise 10:");
+
 var empPairs = employees
     .Select(e => $"{e.FirstName} {e.LastName}")
     .Chunk(2)
     .ToList();
 
-Console.WriteLine("\nExercise 10:");
+var empPairsQuery =
+    (from emp in employees
+     select $"{emp.FirstName} {emp.LastName}")
+    .Chunk(2);
+
+Console.WriteLine("\t(method syntax):");
 foreach (var empPair in empPairs)
 {
-    Console.WriteLine("\t[" + String.Join(", ", empPair) + "]");
+    Console.WriteLine("\t\t[" + string.Join(", ", empPair) + "]");
+}
+
+Console.WriteLine("\t(query/hybrid syntax):");
+foreach (var empPair in empPairsQuery)
+{
+    Console.WriteLine("\t\t[" + string.Join(", ", empPair) + "]");
 }
